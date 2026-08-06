@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanju — Friendly Prediction Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0714;
+  --bg2:#180F2B;
+  --line:#332052;
+  --card:#160F26;
+  --card-edge:#3B2A5E;
+  --violet:#A855F7;
+  --violet-soft:#C4A6F5;
+  --text:#EDE6FA;
+  --text-soft:#9C8FC0;
+  --yes:#6EE7A2;
+  --no:#FF7B85;
+  --glow:rgba(168,85,247,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  background:
+    radial-gradient(1100px 560px at 50% -12%, rgba(168,85,247,.14), transparent 60%),
+    radial-gradient(800px 480px at 100% 110%, rgba(110,231,162,.05), transparent 55%),
+    linear-gradient(180deg, var(--bg2), var(--bg) 40%);
+  color:var(--text);
+  font-family:'Archivo',sans-serif;
+  min-height:100vh;
+  padding-bottom:80px;
+}
+
+/* ---------- header ---------- */
+header{
+  border-bottom:1px solid var(--line);
+  padding:30px 24px 18px;
+  display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;
+  max-width:1180px;margin:0 auto;
+}
+.brand .kana{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.6em;
+  color:var(--violet);display:block;margin-bottom:4px;
+}
+.brand h1{
+  font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.1em;
+  font-size:clamp(34px,5vw,52px);line-height:.95;text-transform:uppercase;color:#fff;
+  text-shadow:0 0 24px var(--glow), 0 0 60px var(--glow);
+}
+.brand h1 .tick{color:var(--violet)}
+.board-meta{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-soft);
+  text-align:right;line-height:1.7;
+}
+.board-meta b{color:#fff;font-weight:500}
+.board-meta .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--violet);margin-right:6px;vertical-align:1px}
+.board-meta .dot.live{background:var(--yes);box-shadow:0 0 8px var(--yes)}
+
+/* ---------- setup notice ---------- */
+.notice{max-width:1180px;margin:20px auto 0;padding:0 24px}
+.notice-inner{
+  border:1px dashed var(--card-edge);border-radius:8px;
+  padding:14px 18px;font-size:13.5px;color:var(--text-soft);line-height:1.6;
+}
+.notice-inner code{
+  font-family:'IBM Plex Mono',monospace;background:rgba(168,85,247,.12);
+  padding:2px 6px;border-radius:4px;font-size:12px;color:var(--violet-soft);
+}
+
+/* ---------- leaderboard strip ---------- */
+.strip{
+  max-width:1180px;margin:22px auto 0;padding:0 24px;
+  display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;
+}
+.chip{
+  flex:0 0 auto;background:rgba(168,85,247,.08);border:1px solid var(--card-edge);
+  border-radius:6px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+  color:var(--text-soft);white-space:nowrap;
+}
+.chip b{color:#fff;font-weight:500}
+.chip .pos{color:var(--yes)}.chip .neg{color:var(--no)}
+
+/* ---------- market grid ---------- */
+main{max-width:1180px;margin:26px auto 0;padding:0 24px;display:grid;gap:26px;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));}
+
+/* ---------- slip card ---------- */
+.slip{
+  background:var(--card);color:var(--text);border:1px solid var(--card-edge);
+  border-radius:12px;position:relative;
+  box-shadow:0 0 0 1px rgba(168,85,247,.06), 0 14px 34px rgba(0,0,0,.55), 0 0 40px var(--glow);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.slip::before{ /* neon top edge */
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg, var(--violet), transparent 70%);
+}
+.slip-head{
+  padding:18px 18px 12px;border-bottom:1px dashed var(--card-edge);
+  display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
+}
+.slip-head h2{
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;line-height:1.2;
+  text-transform:uppercase;letter-spacing:.03em;max-width:70%;color:#fff;
+}
+.stamp{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  border:2px solid var(--yes);color:var(--yes);border-radius:8px;
+  padding:5px 10px 3px;text-align:center;transform:rotate(5deg);
+  line-height:1;flex:0 0 auto;background:rgba(110,231,162,.06);
+  box-shadow:0 0 14px rgba(110,231,162,.18);
+}
+.stamp .pct{font-size:26px;font-family:'IBM Plex Mono',monospace;font-weight:700}
+.stamp .lbl{font-size:9px;letter-spacing:.18em;display:block;margin-top:2px}
+.stamp.low{border-color:var(--no);color:var(--no);background:rgba(255,123,133,.06);box-shadow:0 0 14px rgba(255,123,133,.16)}
+.stamp.resolved{border-color:var(--violet);color:var(--violet-soft);background:rgba(168,85,247,.1);box-shadow:0 0 14px var(--glow)}
+
+.slip-body{padding:12px 18px 16px;flex:1;display:flex;flex-direction:column;gap:12px}
+
+/* price bar */
+.bar{height:10px;border-radius:5px;overflow:hidden;background:rgba(255,123,133,.55);display:flex}
+.bar .y{background:var(--yes);height:100%;transition:width .5s ease}
+.bar-labels{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:5px;color:var(--text-soft)}
+.bar-labels .y{color:var(--yes);font-weight:700}
+.bar-labels .n{color:var(--no);font-weight:700}
+
+/* sparkline */
+.spark{width:100%;height:64px}
+.spark path.line{fill:none;stroke:var(--violet-soft);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.spark path.fill{fill:rgba(168,85,247,.12);stroke:none}
+.spark line.mid{stroke:rgba(196,166,245,.3);stroke-dasharray:3 4;stroke-width:1}
+.spark-cap{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-soft);display:flex;justify-content:space-between;margin-top:2px}
+
+/* pools */
+.pools{display:flex;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.pool{flex:1;border:1px solid var(--card-edge);border-radius:6px;padding:7px 10px;background:rgba(0,0,0,.25)}
+.pool .t{font-size:10px;letter-spacing:.14em;color:var(--text-soft)}
+.pool .v{font-size:16px;font-weight:700;margin-top:2px;color:#fff}
+.pool.yes .v{color:var(--yes)}.pool.no .v{color:var(--no)}
+
+details.book{border-top:1px dashed var(--card-edge);padding-top:10px}
+details.book summary{
+  cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-soft);list-style:none;display:flex;align-items:center;gap:6px;font-weight:600;
+}
+details.book summary::before{content:"▸";transition:transform .2s;color:var(--violet)}
+details.book[open] summary::before{transform:rotate(90deg)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+th{font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-soft);text-align:left;padding:4px 6px;border-bottom:1px solid var(--card-edge);font-weight:600}
+td{font-family:'IBM Plex Mono',monospace;padding:5px 6px;border-bottom:1px solid rgba(59,42,94,.5);color:var(--text)}
+td.side-YES{color:var(--yes);font-weight:700}
+td.side-NO{color:var(--no);font-weight:700}
+td.num{text-align:right}
+th.num{text-align:right}
+.won{background:rgba(110,231,162,.08)}
+.lost{opacity:.45;text-decoration:line-through}
+
+.slip-foot{
+  padding:8px 18px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--text-soft);display:flex;justify-content:space-between;border-top:1px dashed var(--card-edge);
+}
+.badge-resolved{color:var(--violet-soft);font-weight:700;letter-spacing:.1em}
+
+footer{
+  max-width:1180px;margin:40px auto 0;padding:0 24px;
+  font-size:12px;color:var(--text-soft);line-height:1.7;
+}
+footer code{font-family:'IBM Plex Mono',monospace;color:var(--violet-soft)}
+footer b{color:var(--text)}
+
+.empty{
+  grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-soft);font-size:14px;
+  border:1px dashed var(--card-edge);border-radius:10px;
+}
+:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="kana">サンジュ</span>
+    <h1>Sanju<span class="tick">▮</span></h1>
+  </div>
+  <div class="board-meta" id="meta">
+    <div><span class="dot" id="liveDot"></span><span id="srcLabel">connecting…</span></div>
+    <div>last refresh <b id="lastRefresh">—</b></div>
+    <div>auto-refresh every 60s</div>
+  </div>
+</header>
+
+<div class="notice" id="setupNotice" hidden>
+  <div class="notice-inner">
+    <b>Couldn't reach the sheet — showing demo data.</b> Make sure you're opening the newest copy of this file
+    (it has your published link built in). If the diagnostics below mention CORS or blocking, try Chrome,
+    or host this file on GitHub Pages.<span id="diag"></span>
+  </div>
+</div>
+
+<div class="strip" id="leaderboard" aria-label="Leaderboard"></div>
+
+<main id="markets" aria-live="polite"></main>
+
+<footer>
+  <div><b>How the market moves:</b> every bet joins the YES or NO pool. Price of YES = YES pool ÷ total pool
+  (with <code>10</code> virtual coins seeded per side so the first bet doesn't slam the needle).</div>
+  <div><b>Payouts (parimutuel):</b> if your side wins you split the whole real pool in proportion to your stake —
+  payout = stake × total ÷ winning pool. Losers pay winners; no house cut.</div>
+  <div><b>Resolving:</b> add a row with name <code>RESOLVE</code>, the market, the winning side, amount <code>0</code>.</div>
+</footer>
+
+<script>
+/* ================= CONFIG ================= */
+const SHEET_ID = "1Nd5qt5t-AvtmZ9JmdOS1aOaky3CQUzxRtaHl7HsEPEM";
+// BEST OPTION: File → Share → Publish to web → CSV, paste that link here:
+const PUBLISHED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQDV55rwcI-nOoAoc6BTyjjyuO6uqw7GvWW85ghGYUgCIsWwfBsDPXLqmh-DQN5XH517KLsV8LEsE_e/pub?output=csv";
+const SEED = 10;               // virtual liquidity per side (display price only)
+const REFRESH_MS = 60000;
+const CURRENCY = "";           // e.g. "$" — leave empty for plain points
+/* ========================================== */
+
+const qs = new URLSearchParams(location.search);
+const candidateUrls = [
+  qs.get("sheet"),
+  PUBLISHED_CSV_URL,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`
+].filter(Boolean);
+
+const DEMO_CSV = `Date,Name,Market,Side,Amount
+2026-08-01 10:00,Arya,Nitish finishes top 3 this season,YES,20
+2026-08-01 12:30,Coby,Nitish finishes top 3 this season,NO,15
+2026-08-02 09:15,Nitish,Nitish finishes top 3 this season,YES,25
+2026-08-03 18:40,Sam,Nitish finishes top 3 this season,NO,30
+2026-08-04 20:05,Arya,Nitish finishes top 3 this season,YES,10
+2026-08-01 11:00,Coby,Someone scores 150+ pts in week 1,YES,10
+2026-08-02 14:00,Arya,Someone scores 150+ pts in week 1,NO,10
+2026-08-03 16:20,Nitish,Someone scores 150+ pts in week 1,NO,20
+2026-08-04 11:00,RESOLVE,Someone scores 150+ pts in week 1,NO,0`;
+
+/* ---------- tiny CSV parser (handles quoted commas) ---------- */
+function parseCSV(text){
+  const rows=[];let row=[],cur="",inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+      else cur+=c;
+    }else{
+      if(c==='"') inQ=true;
+      else if(c===','){row.push(cur);cur="";}
+      else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n')i++; row.push(cur);rows.push(row);row=[];cur=""; }
+      else cur+=c;
+    }
+  }
+  if(cur.length||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==""));
+}
+
+function normalizeBets(rows){
+  if(!rows.length) return [];
+  const head=rows[0].map(h=>h.trim().toLowerCase());
+  const col=names=>head.findIndex(h=>names.some(n=>h.includes(n)));
+  const iDate=col(["date","time"]), iName=col(["name","bettor","who"]),
+        iMkt=col(["market","bet","question"]), iSide=col(["side","pick"]),
+        iAmt=col(["amount","stake","wager","points"]);
+  if(iMkt<0||iSide<0||iAmt<0) return [];
+  return rows.slice(1).map(r=>({
+    date: iDate>=0 ? new Date(r[iDate]) : new Date(0),
+    name:(r[iName]||"?").trim(),
+    market:(r[iMkt]||"").trim(),
+    side:(r[iSide]||"").trim().toUpperCase(),
+    amount:parseFloat(r[iAmt])||0
+  })).filter(b=>b.market && (b.side==="YES"||b.side==="NO"))
+    .sort((a,b)=>a.date-b.date);
+}
+
+/* ---------- market math (parimutuel) ---------- */
+function buildMarkets(bets){
+  const map=new Map();
+  for(const b of bets){
+    if(!map.has(b.market)) map.set(b.market,{name:b.market,bets:[],yes:0,no:0,history:[],resolved:null});
+    const m=map.get(b.market);
+    if(b.name.toUpperCase()==="RESOLVE"){ m.resolved=b.side; continue; }
+    if(b.amount<=0) continue;
+    m.bets.push(b);
+    if(b.side==="YES") m.yes+=b.amount; else m.no+=b.amount;
+    m.history.push({date:b.date, p:(m.yes+SEED)/(m.yes+m.no+2*SEED)});
+  }
+  return [...map.values()];
+}
+function payout(m, bet){
+  const pool=m.yes+m.no;
+  const winPool = bet.side==="YES" ? m.yes : m.no;
+  if(winPool===0) return bet.amount;
+  return bet.amount*pool/winPool;
+}
+
+/* ---------- leaderboard (net across resolved markets) ---------- */
+function leaderboard(markets){
+  const net={};
+  for(const m of markets){
+    if(!m.resolved) continue;
+    for(const b of m.bets){
+      net[b.name]??=0;
+      net[b.name]+= (b.side===m.resolved) ? payout(m,b)-b.amount : -b.amount;
+    }
+  }
+  return Object.entries(net).sort((a,b)=>b[1]-a[1]);
+}
+
+/* ---------- rendering ---------- */
+const fmt=n=>CURRENCY+(Math.round(n*100)/100).toLocaleString();
+const pct=p=>Math.round(p*100);
+
+function sparkline(hist){
+  if(hist.length<2){
+    const p=hist.length?hist[0].p:.5;
+    hist=[{p},{p}];
+  }
+  const W=300,H=60,pad=4;
+  const xs=hist.map((_,i)=>pad+i*(W-2*pad)/(hist.length-1));
+  const ys=hist.map(h=>H-pad-(h.p*(H-2*pad)));
+  let d=`M ${xs[0]} ${ys[0]}`;
+  for(let i=1;i<xs.length;i++) d+=` L ${xs[i]} ${ys[i]}`;
+  const fill=d+` L ${xs[xs.length-1]} ${H-pad} L ${xs[0]} ${H-pad} Z`;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="price history">
+    <line class="mid" x1="0" y1="${H/2}" x2="${W}" y2="${H/2}"></line>
+    <path class="fill" d="${fill}"></path><path class="line" d="${d}"></path></svg>`;
+}
+
+function renderMarket(m){
+  const p=(m.yes+SEED)/(m.yes+m.no+2*SEED);
+  const pool=m.yes+m.no;
+  const first=m.history[0], last=m.history[m.history.length-1];
+  const stampCls = m.resolved ? "stamp resolved" : (p<.5?"stamp low":"stamp");
+  const stampTxt = m.resolved ? `<span class="pct">${m.resolved}</span><span class="lbl">FINAL</span>`
+                              : `<span class="pct">${pct(p)}%</span><span class="lbl">YES</span>`;
+  const rows=m.bets.map(b=>{
+    const isWin = m.resolved && b.side===m.resolved;
+    const isLose= m.resolved && b.side!==m.resolved;
+    const pay = m.resolved
+      ? (isWin?payout(m,b):0)
+      : payout(m,b); // hypothetical if their side wins
+    return `<tr class="${isWin?'won':''}${isLose?' lost':''}">
+      <td>${esc(b.name)}</td>
+      <td class="side-${b.side}">${b.side}</td>
+      <td class="num">${fmt(b.amount)}</td>
+      <td class="num">${fmt(pay)}</td></tr>`;
+  }).join("");
+  return `<article class="slip">
+    <div class="slip-head"><h2>${esc(m.name)}</h2><div class="${stampCls}" aria-label="market price">${stampTxt}</div></div>
+    <div class="slip-body">
+      <div>
+        <div class="bar"><div class="y" style="width:${p*100}%"></div></div>
+        <div class="bar-labels"><span class="y">YES ${pct(p)}%</span><span class="n">NO ${pct(1-p)}%</span></div>
+      </div>
+      <div>
+        ${sparkline(m.history)}
+        <div class="spark-cap"><span>${first?dstr(first.date):""}</span><span>${last?dstr(last.date):""}</span></div>
+      </div>
+      <div class="pools">
+        <div class="pool yes"><div class="t">YES POOL</div><div class="v">${fmt(m.yes)}</div></div>
+        <div class="pool no"><div class="t">NO POOL</div><div class="v">${fmt(m.no)}</div></div>
+        <div class="pool"><div class="t">TOTAL</div><div class="v">${fmt(pool)}</div></div>
+      </div>
+      <details class="book" ${m.resolved?"open":""}>
+        <summary>Book · ${m.bets.length} bet${m.bets.length!==1?"s":""}</summary>
+        <table><thead><tr><th>Bettor</th><th>Side</th><th class="num">Stake</th><th class="num">${m.resolved?"Paid":"Pays if right"}</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </details>
+    </div>
+    <div class="slip-foot">
+      <span>NO.&nbsp;${String(Math.abs(hash(m.name))%9999).padStart(4,"0")}</span>
+      ${m.resolved?`<span class="badge-resolved">SETTLED · ${m.resolved} WINS</span>`:`<span>OPEN MARKET</span>`}
+    </div>
+  </article>`;
+}
+
+function renderAll(bets){
+  const markets=buildMarkets(bets);
+  const open=markets.filter(m=>!m.resolved), done=markets.filter(m=>m.resolved);
+  const el=document.getElementById("markets");
+  el.innerHTML = markets.length
+    ? [...open,...done].map(renderMarket).join("")
+    : `<div class="empty">No bets yet. Add a row to the sheet and the board lights up.</div>`;
+  const lb=leaderboard(markets);
+  document.getElementById("leaderboard").innerHTML =
+    lb.length ? lb.map(([n,v],i)=>`<div class="chip">#${i+1} <b>${esc(n)}</b>
+      <span class="${v>=0?'pos':'neg'}">${v>=0?"+":""}${fmt(v)}</span></div>`).join("")
+    : `<div class="chip">Leaderboard appears once a market settles</div>`;
+}
+
+/* ---------- utils ---------- */
+const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dstr=d=>isNaN(d)?"":d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+const short=u=>{try{const x=new URL(u);return x.pathname.split("/").slice(0,4).join("/")+"…"}catch(e){return u.slice(0,40)+"…"}};
+function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return h}
+
+/* ---------- data loop ---------- */
+async function load(){
+  let csv=DEMO_CSV, live=false;
+  const errors=[];
+  for(const url of candidateUrls){
+    try{
+      const res=await fetch(url,{cache:"no-store"});
+      if(!res.ok){ errors.push(`HTTP ${res.status} — ${short(url)}`); continue; }
+      const text=await res.text();
+      if(text && !text.trim().startsWith("<")){ csv=text; live=true; break; } // skip HTML error/login pages
+      errors.push(`got a webpage, not data — ${short(url)}`);
+    }catch(e){ errors.push(`${e.message||"blocked by browser (CORS/network)"} — ${short(url)}`); }
+  }
+  const diag=document.getElementById("diag");
+  if(diag) diag.innerHTML = live ? "" :
+    "<br><b>What failed:</b><br>" + errors.map(esc).join("<br>");
+  document.getElementById("setupNotice").hidden=!!live;
+  document.getElementById("srcLabel").textContent= live?"live · google sheet":"demo data (sheet unreachable)";
+  document.getElementById("liveDot").classList.toggle("live",live);
+  document.getElementById("lastRefresh").textContent=new Date().toLocaleTimeString();
+  renderAll(normalizeBets(parseCSV(csv)));
+}
+load();
+setInterval(load,REFRESH_MS);
+</script>
+</body>
+</html>
